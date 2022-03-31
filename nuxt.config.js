@@ -1,7 +1,7 @@
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    title: 'movies-nuxt-app',
+    title: 'Movie App - Latest streaming movies',
     htmlAttrs: {
       lang: 'en',
     },
@@ -24,6 +24,10 @@ export default {
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
+
+  env: {
+    apiKey: '3437ff1f51a6aa288135641ecead7641'
+  },
 
   // Modules for dev and build (recommended): https://go.nuxtjs.dev/config-modules
   buildModules: [

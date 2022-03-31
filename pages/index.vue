@@ -3,12 +3,31 @@
     <!-- Hero -->
     <Hero />
 
+    <!-- Search -->
+
+    <Search
+      :searchVal="searchInput"
+      @searchValue="getSearchValue"
+      @clearSearch="clear"
+    />
+
+    <!-- Loading -->
+    <Loading v-if="$fetchState.pending" />
+
     <!-- Movies -->
-    <div class="container movies">
-      <div id="movie-grid" class="movies-grid">
-        <div v-for="movie in movies" :key="movie.id" class="movie">
+    <div v-else class="container movies">
+      <div v-if="searchInput !== ''" id="movie-grid" class="movies-grid">
+        <!-- Searched Movies -->
+        <section v-for="movie in searchedMovies" :key="movie.id" class="movie">
           <MoviePoster :movie="movie" />
-        </div>
+        </section>
+      </div>
+
+      <div v-else id="movie-grid" class="movies-grid">
+        <!-- Now Playing -->
+        <section v-for="movie in movies" :key="movie.id" class="movie">
+          <MoviePoster :movie="movie" />
+        </section>
       </div>
     </div>
   </main>
@@ -20,20 +39,61 @@ export default {
   data() {
     return {
       movies: [],
+      searchInput: '',
+      searchedMovies: [],
     }
   },
   async fetch() {
-    await this.getMovies()
+    if (this.searchInput === '') {
+      await this.getMovies()
+      return
+    }
+    if (this.searchInput !== '') {
+      // this.clearInput()
+      await this.searchMovies()
+    }
   },
+  head() {
+    return {
+      meta: [
+        {
+          hid: 'description',
+          name: 'description',
+          content: 'See all the latest streaming movies in theaters & online',
+        },
+        {
+          hid: 'keywords',
+          name: 'keywords',
+          content: 'movies, stream, streaming',
+        },
+      ],
+    }
+  },
+  fetchDelay: 500,
   methods: {
     async getMovies() {
       const { data } = await this.$axios.get(
-        `/movie/now_playing?api_key=3437ff1f51a6aa288135641ecead7641&language=en-US&page=1`
+        `/movie/now_playing?api_key=${process.env.apiKey}&language=en-US&page=1`
       )
       data.results.forEach((movie) => {
         this.movies.push(movie)
       })
-      // console.log(this.movies)
+    },
+    async searchMovies() {
+      const { data } = await this.$axios.get(
+        `/search/movie?api_key=${process.env.apiKey}&language=en-US&query=${this.searchInput}&page=1&include_adult=false`
+      )
+      data.results.forEach((movie) => {
+        this.searchedMovies.push(movie)
+      })
+    },
+    getSearchValue(value) {
+      this.searchInput = value
+      this.$fetch()
+    },
+    clear(value) {
+      this.searchInput = ''
+      this.searchedMovies = []
     },
   },
 }
@@ -44,24 +104,6 @@ export default {
   .loading {
     padding-top: 120px;
     align-items: flex-start;
-  }
-  .search {
-    display: flex;
-    padding: 32px 16px;
-    input {
-      max-width: 350px;
-      width: 100%;
-      padding: 12px 6px;
-      font-size: 14px;
-      border: none;
-      &:focus {
-        outline: none;
-      }
-    }
-    .button {
-      border-top-left-radius: 0;
-      border-bottom-left-radius: 0;
-    }
   }
   .movies {
     padding: 32px 16px;
